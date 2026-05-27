@@ -9,13 +9,14 @@ import DashboardCard from '../components/DashboardCard'
 import RateCard from '../components/RateCard'
 import PageHeader from '../components/PageHeader'
 import { formatCurrency } from '../utils/productIdGenerator'
-import { products } from '../data/products'
+import { getAllProducts } from '../utils/localProducts'
 import { salesData, recentTransactions } from '../data/sales'
 import { orders } from '../data/orders'
 import { customers } from '../data/customers'
 import { currentRates } from '../data/rates'
 
 export default function Dashboard() {
+  const products = getAllProducts()
   const goldStock = products.filter((p) => p.metalType === 'Gold').reduce((s, p) => s + p.netWeight * p.quantity, 0)
   const silverStock = products.filter((p) => p.metalType === 'Silver').reduce((s, p) => s + p.netWeight * p.quantity, 0)
   const todaySales = salesData[salesData.length - 1]?.sales || 0

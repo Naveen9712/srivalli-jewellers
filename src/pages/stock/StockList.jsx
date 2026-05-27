@@ -1,13 +1,13 @@
-import { useState, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { FiPlus, FiFilter } from 'react-icons/fi'
 import { Link } from 'react-router-dom'
 import PageHeader from '../../components/PageHeader'
 import SearchBar from '../../components/SearchBar'
 import TableComponent from '../../components/TableComponent'
 import Modal from '../../components/Modal'
-import { products } from '../../data/products'
 import { formatCurrency, formatWeight } from '../../utils/productIdGenerator'
 import { useDebounce } from '../../hooks/useDebounce'
+import { getAllProducts, loadTempProducts } from '../../utils/localProducts'
 
 const columns = [
   { key: 'image', label: 'Image', type: 'image' },
@@ -26,10 +26,17 @@ export default function StockList({ metalFilter, title, addPath, lowStockOnly })
   const [filter, setFilter] = useState('all')
   const [page, setPage] = useState(1)
   const [viewItem, setViewItem] = useState(null)
+  const [tempCount, setTempCount] = useState(0)
   const debouncedSearch = useDebounce(search)
 
+  useEffect(() => {
+    // Refresh after add (navigation back) and on manual refresh
+    setTempCount(loadTempProducts().length)
+  }, [])
+
   const filtered = useMemo(() => {
-    let list = metalFilter ? products.filter((p) => p.metalType === metalFilter) : products
+    const all = getAllProducts()
+    let list = metalFilter ? all.filter((p) => p.metalType === metalFilter) : all
     if (lowStockOnly || filter === 'low') list = list.filter((p) => p.status === 'Low Stock' || p.quantity <= 2)
     if (debouncedSearch) {
       const q = debouncedSearch.toLowerCase()
@@ -41,14 +48,14 @@ export default function StockList({ metalFilter, title, addPath, lowStockOnly })
       )
     }
     return list
-  }, [metalFilter, filter, debouncedSearch, lowStockOnly])
+  }, [metalFilter, filter, debouncedSearch, lowStockOnly, tempCount])
 
   return (
     <div className="page-container">
       <PageHeader
         title={title}
         subtitle="Manage inventory with search, filter and export"
-        breadcrumbs={[{ label: 'Stock', path: '/stock/gold-list' }, { label: title }]}
+        breadcrumbs={[{ label: 'Stocks', path: '/stocks' }, { label: title }]}
         actions={
           <Link to={addPath} className="btn-gold">
             <FiPlus /> Add Item

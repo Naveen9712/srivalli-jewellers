@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { FiUpload, FiSave } from 'react-icons/fi'
+import { useNavigate } from 'react-router-dom'
 import PageHeader from '../../components/PageHeader'
 import FormInput from '../../components/FormInput'
 import { CATEGORIES, SUB_CATEGORIES, METAL_TYPES, CARAT_OPTIONS } from '../../utils/constants'
 import { generateProductId } from '../../utils/productIdGenerator'
-import { products } from '../../data/products'
+import { addTempProduct, getAllProducts } from '../../utils/localProducts'
 
 export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Gold Item' }) {
+  const navigate = useNavigate()
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
     defaultValues: {
       metalType: metalTypeDefault,
@@ -28,19 +30,50 @@ export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Gol
 
   useEffect(() => {
     if (category && carat) {
-      const seq = products.length + 1
+      const seq = getAllProducts().length + 1
       setPreviewId(generateProductId(category, carat, seq))
     }
   }, [category, carat])
 
   const onSubmit = (data) => {
-    alert(`Product saved!\nID: ${previewId}\nName: ${data.productName}`)
+    const tempItem = {
+      id: `temp-${Date.now()}`,
+      uniqueId: previewId,
+      name: data.productName,
+      category: data.category,
+      subCategory: data.subCategory || '',
+      metalType: data.metalType,
+      carat: data.carat,
+      grossWeight: Number(data.grossWeight || 0),
+      netWeight: Number(data.netWeight || 0),
+      stoneWeight: Number(data.stoneWeight || 0),
+      wastage: Number(data.wastage || 0),
+      makingCharges: Number(data.makingCharges || 0),
+      purchasePrice: Number(data.purchasePrice || 0),
+      sellingPrice: Number(data.sellingPrice || 0),
+      quantity: Number(data.quantity || 0),
+      huid: data.huid || '',
+      designCode: data.designCode || '',
+      vendor: data.vendorName || '',
+      status: Number(data.quantity || 0) <= 2 ? 'Low Stock' : 'In Stock',
+      image: imagePreview || 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100&h=100&fit=crop',
+      _temp: true,
+      _createdAt: new Date().toISOString(),
+    }
+
+    addTempProduct(tempItem)
+    navigate('/stocks')
   }
 
   const handleImage = (e) => {
     const file = e.target.files?.[0]
     if (file) {
-      setImagePreview(URL.createObjectURL(file))
+      const reader = new FileReader()
+      reader.onload = () => {
+        const result = typeof reader.result === 'string' ? reader.result : null
+        if (result) setImagePreview(result)
+      }
+      reader.readAsDataURL(file)
       setValue('image', file.name)
     }
   }
@@ -50,7 +83,7 @@ export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Gol
       <PageHeader
         title={title}
         subtitle="Add new jewellery item to inventory"
-        breadcrumbs={[{ label: 'Stock', path: '/stock/gold-list' }, { label: title }]}
+        breadcrumbs={[{ label: 'Stocks', path: '/stocks' }, { label: title }]}
       />
 
       <form onSubmit={handleSubmit(onSubmit)}>
