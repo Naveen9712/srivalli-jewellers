@@ -18,10 +18,14 @@ export default function ProductCard({ product, onAdd, onClick }) {
         <h3 className="font-semibold text-sm text-primary-900 mt-0.5 line-clamp-1">{product.name}</h3>
         <div className="flex items-center justify-between mt-2">
           <span className="text-xs badge-info">{product.carat}</span>
-          <span className="text-xs text-slate-500">{product.netWeight}g</span>
+          {product.metalType && (
+            <span className="text-xs text-slate-500">{product.metalType}</span>
+          )}
         </div>
         <div className="flex items-center justify-between mt-2">
-          <p className="font-bold text-primary-800">{formatCurrency(product.sellingPrice)}</p>
+          {product.sellingPrice != null && product.sellingPrice > 0 && (
+            <p className="font-bold text-primary-800">{formatCurrency(product.sellingPrice)}</p>
+          )}
           {onAdd && (
             <button
               type="button"

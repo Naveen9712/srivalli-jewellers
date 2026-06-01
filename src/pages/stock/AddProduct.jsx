@@ -13,8 +13,6 @@ export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Gol
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
     defaultValues: {
       metalType: metalTypeDefault,
-      quantity: 1,
-      wastage: 8,
     },
   })
 
@@ -44,18 +42,8 @@ export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Gol
       subCategory: data.subCategory || '',
       metalType: data.metalType,
       carat: data.carat,
-      grossWeight: Number(data.grossWeight || 0),
-      netWeight: Number(data.netWeight || 0),
-      stoneWeight: Number(data.stoneWeight || 0),
-      wastage: Number(data.wastage || 0),
-      makingCharges: Number(data.makingCharges || 0),
-      purchasePrice: Number(data.purchasePrice || 0),
-      sellingPrice: Number(data.sellingPrice || 0),
-      quantity: Number(data.quantity || 0),
-      huid: data.huid || '',
-      designCode: data.designCode || '',
-      vendor: data.vendorName || '',
-      status: Number(data.quantity || 0) <= 2 ? 'Low Stock' : 'In Stock',
+      quantity: 1,
+      status: 'In Stock',
       image: imagePreview || 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100&h=100&fit=crop',
       _temp: true,
       _createdAt: new Date().toISOString(),
@@ -97,23 +85,6 @@ export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Gol
                 <FormInput label="Sub Category" name="subCategory" type="select" options={subCategories} register={register} errors={errors} disabled={!category} />
                 <FormInput label="Metal Type" name="metalType" type="select" options={METAL_TYPES} register={register} errors={errors} required />
                 <FormInput label="Carat Value" name="carat" type="select" options={caratOptions} register={register} errors={errors} required rules={{ required: 'Required' }} />
-                <FormInput label="Design Code" name="designCode" register={register} errors={errors} placeholder="DSG-RNG-001" />
-                <FormInput label="Vendor Name" name="vendorName" register={register} errors={errors} />
-                <FormInput label="HUID Number" name="huid" register={register} errors={errors} placeholder="HUID1234567890" />
-              </div>
-            </div>
-
-            <div className="card p-6">
-              <h3 className="font-semibold text-primary-900 mb-4 border-b pb-2">Weight & Pricing</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <FormInput label="Gross Weight (g)" name="grossWeight" type="number" step="0.001" register={register} errors={errors} required rules={{ required: 'Required' }} />
-                <FormInput label="Net Weight (g)" name="netWeight" type="number" step="0.001" register={register} errors={errors} required rules={{ required: 'Required' }} />
-                <FormInput label="Stone Weight (g)" name="stoneWeight" type="number" step="0.001" register={register} errors={errors} />
-                <FormInput label="Wastage %" name="wastage" type="number" register={register} errors={errors} />
-                <FormInput label="Making Charges (₹)" name="makingCharges" type="number" register={register} errors={errors} />
-                <FormInput label="Quantity" name="quantity" type="number" register={register} errors={errors} required />
-                <FormInput label="Purchase Price (₹)" name="purchasePrice" type="number" register={register} errors={errors} required rules={{ required: 'Required' }} />
-                <FormInput label="Selling Price (₹)" name="sellingPrice" type="number" register={register} errors={errors} required rules={{ required: 'Required' }} />
               </div>
             </div>
           </div>
