@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { formatCurrency } from '../utils/productIdGenerator'
+import { formatCurrency, formatWeight } from '../utils/productIdGenerator'
 import { getProductImage } from '../utils/categoryImages'
 
 export default function ProductCard({ product, onAdd, onClick }) {
@@ -19,12 +19,15 @@ export default function ProductCard({ product, onAdd, onClick }) {
       <div className="mt-3">
         <p className="text-xs text-gold-600 font-mono">{product.uniqueId}</p>
         <h3 className="font-semibold text-sm text-primary-900 mt-0.5 line-clamp-1">{product.name}</h3>
-        <div className="flex items-center justify-between mt-2">
+        <div className="flex items-center justify-between mt-2 gap-2">
           <span className="text-xs badge-info">{product.carat}</span>
-          {product.metalType && (
-            <span className="text-xs text-slate-500">{product.metalType}</span>
+          {product.netWeight > 0 && (
+            <span className="text-xs text-slate-500">{formatWeight(product.netWeight)}</span>
           )}
         </div>
+        {product.metalType && (
+          <p className="text-xs text-slate-500 mt-1">{product.metalType}</p>
+        )}
         <div className="flex items-center justify-between mt-2">
           {product.sellingPrice != null && product.sellingPrice > 0 && (
             <p className="font-bold text-primary-800">{formatCurrency(product.sellingPrice)}</p>

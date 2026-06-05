@@ -1,5 +1,3 @@
-import { products as baseProducts } from '../data/products'
-
 const STORAGE_KEY = 'srivalli:stocks:temp'
 
 function safeJsonParse(value, fallback) {
@@ -23,8 +21,7 @@ export function saveTempProducts(list) {
 }
 
 export function getAllProducts() {
-  const temp = loadTempProducts()
-  return [...baseProducts, ...temp]
+  return loadTempProducts()
 }
 
 export function addTempProduct(product) {

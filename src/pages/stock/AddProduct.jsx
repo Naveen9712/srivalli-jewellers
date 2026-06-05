@@ -43,6 +43,7 @@ export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Gol
       subCategory: data.subCategory || '',
       metalType: data.metalType,
       carat: data.carat,
+      netWeight: Number(data.weight || 0),
       quantity: 1,
       status: 'In Stock',
       image: imagePreview || getCategoryImage(data.category),
@@ -86,6 +87,7 @@ export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Gol
                 <FormInput label="Sub Category" name="subCategory" type="select" options={subCategories} register={register} errors={errors} disabled={!category} />
                 <FormInput label="Metal Type" name="metalType" type="select" options={METAL_TYPES} register={register} errors={errors} required />
                 <FormInput label="Carat Value" name="carat" type="select" options={caratOptions} register={register} errors={errors} required rules={{ required: 'Required' }} />
+                <FormInput label="Weight (g)" name="weight" type="number" step="0.001" register={register} errors={errors} required rules={{ required: 'Required' }} />
               </div>
             </div>
           </div>

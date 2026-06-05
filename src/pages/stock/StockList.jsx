@@ -1,60 +1,22 @@
-import { useEffect, useMemo, useState } from 'react'
-import { FiPlus, FiFilter } from 'react-icons/fi'
+import { useEffect, useState } from 'react'
+import { FiPlus } from 'react-icons/fi'
 import { Link } from 'react-router-dom'
 import PageHeader from '../../components/PageHeader'
-import SearchBar from '../../components/SearchBar'
-import TableComponent from '../../components/TableComponent'
-import Modal from '../../components/Modal'
-import { formatCurrency, formatWeight } from '../../utils/productIdGenerator'
-import { useDebounce } from '../../hooks/useDebounce'
-import { getAllProducts, loadTempProducts } from '../../utils/localProducts'
+import ProductCard from '../../components/ProductCard'
+import { loadTempProducts } from '../../utils/localProducts'
 
-const columns = [
-  { key: 'image', label: 'Image', type: 'image' },
-  { key: 'uniqueId', label: 'Unique ID' },
-  { key: 'name', label: 'Product Name' },
-  { key: 'category', label: 'Category' },
-  { key: 'carat', label: 'Carat' },
-  { key: 'netWeight', label: 'Weight', render: (v) => formatWeight(v) },
-  { key: 'quantity', label: 'Qty' },
-  { key: 'sellingPrice', label: 'Price', type: 'currency' },
-  { key: 'status', label: 'Status', type: 'status' },
-]
-
-export default function StockList({ metalFilter, title, addPath, lowStockOnly }) {
-  const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState('all')
-  const [page, setPage] = useState(1)
-  const [viewItem, setViewItem] = useState(null)
-  const [tempCount, setTempCount] = useState(0)
-  const debouncedSearch = useDebounce(search)
+export default function StockList({ title = 'Stocks', addPath = '/stocks/add' }) {
+  const [items, setItems] = useState([])
 
   useEffect(() => {
-    // Refresh after add (navigation back) and on manual refresh
-    setTempCount(loadTempProducts().length)
+    setItems(loadTempProducts())
   }, [])
-
-  const filtered = useMemo(() => {
-    const all = getAllProducts()
-    let list = metalFilter ? all.filter((p) => p.metalType === metalFilter) : all
-    if (lowStockOnly || filter === 'low') list = list.filter((p) => p.status === 'Low Stock' || p.quantity <= 2)
-    if (debouncedSearch) {
-      const q = debouncedSearch.toLowerCase()
-      list = list.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.uniqueId.toLowerCase().includes(q) ||
-          p.category.toLowerCase().includes(q),
-      )
-    }
-    return list
-  }, [metalFilter, filter, debouncedSearch, lowStockOnly, tempCount])
 
   return (
     <div className="page-container">
       <PageHeader
         title={title}
-        subtitle="Manage inventory with search, filter and export"
+        subtitle="Your saved items"
         breadcrumbs={[{ label: 'Stocks', path: '/stocks' }, { label: title }]}
         actions={
           <Link to={addPath} className="btn-gold">
@@ -63,46 +25,20 @@ export default function StockList({ metalFilter, title, addPath, lowStockOnly })
         }
       />
 
-      <div className="card p-4 mb-4 flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
-        <SearchBar value={search} onChange={setSearch} placeholder="Search by name, ID, category..." className="w-full" />
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <FiFilter className="text-slate-400" />
-          <select value={filter} onChange={(e) => setFilter(e.target.value)} className="input-field w-full md:w-auto">
-            <option value="all">All Status</option>
-            <option value="low">Low Stock Only</option>
-          </select>
+      {items.length === 0 ? (
+        <div className="card p-10 text-center">
+          <p className="text-slate-600 mb-4">No items saved yet.</p>
+          <Link to={addPath} className="btn-gold inline-flex">
+            <FiPlus /> Add your first item
+          </Link>
         </div>
-      </div>
-
-      <TableComponent
-        columns={columns}
-        data={filtered}
-        page={page}
-        onPageChange={setPage}
-        onView={setViewItem}
-        onEdit={(row) => alert(`Edit: ${row.name}`)}
-        onDelete={(row) => confirm(`Delete ${row.name}?`) && alert('Deleted (demo)')}
-        onExport={() => alert('Export to Excel (API pending)')}
-      />
-
-      <Modal isOpen={!!viewItem} onClose={() => setViewItem(null)} title="Product Details" size="lg">
-        {viewItem && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <img src={viewItem.image} alt={viewItem.name} className="w-full rounded-xl object-cover max-h-64" />
-            <div className="space-y-3 text-sm">
-              <p><span className="text-slate-500">ID:</span> <span className="font-mono text-gold-600">{viewItem.uniqueId}</span></p>
-              <p><span className="text-slate-500">Name:</span> <strong>{viewItem.name}</strong></p>
-              <p><span className="text-slate-500">Category:</span> {viewItem.category} / {viewItem.subCategory}</p>
-              <p><span className="text-slate-500">Carat:</span> {viewItem.carat}</p>
-              <p><span className="text-slate-500">Gross Weight:</span> {formatWeight(viewItem.grossWeight)}</p>
-              <p><span className="text-slate-500">Net Weight:</span> {formatWeight(viewItem.netWeight)}</p>
-              <p><span className="text-slate-500">Selling Price:</span> <strong className="text-primary-800">{formatCurrency(viewItem.sellingPrice)}</strong></p>
-              <p><span className="text-slate-500">HUID:</span> {viewItem.huid}</p>
-              <p><span className="text-slate-500">Vendor:</span> {viewItem.vendor}</p>
-            </div>
-          </div>
-        )}
-      </Modal>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {items.map((item) => (
+            <ProductCard key={item.id} product={item} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
