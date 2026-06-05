@@ -17,12 +17,12 @@ export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Gol
     },
   })
 
-  const [previewId, setPreviewId] = useState('')
   const [imagePreview, setImagePreview] = useState(null)
 
   const category = watch('category')
   const carat = watch('carat')
   const metalType = watch('metalType')
+  const uniqueNumber = watch('uniqueNumber')
 
   const caratOptions = metalType === 'Silver' ? CARAT_OPTIONS.silver : CARAT_OPTIONS.gold
   const subCategories = category ? SUB_CATEGORIES[category] || [] : []
@@ -30,14 +30,14 @@ export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Gol
   useEffect(() => {
     if (category && carat) {
       const seq = getAllProducts().length + 1
-      setPreviewId(generateProductId(category, carat, seq))
+      setValue('uniqueNumber', generateProductId(category, carat, seq))
     }
-  }, [category, carat])
+  }, [category, carat, setValue])
 
   const onSubmit = (data) => {
     const tempItem = {
       id: `temp-${Date.now()}`,
-      uniqueId: previewId,
+      uniqueId: data.uniqueNumber,
       name: data.productName,
       category: data.category,
       subCategory: data.subCategory || '',
@@ -83,6 +83,7 @@ export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Gol
               <h3 className="font-semibold text-primary-900 mb-4 border-b pb-2">Basic Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormInput label="Product Name" name="productName" register={register} errors={errors} required rules={{ required: 'Required' }} />
+                <FormInput label="Unique Number" name="uniqueNumber" register={register} errors={errors} required rules={{ required: 'Required' }} placeholder="GLD-RNG-22K-0001" />
                 <FormInput label="Product Category" name="category" type="select" options={CATEGORIES} register={register} errors={errors} required rules={{ required: 'Required' }} />
                 <FormInput label="Sub Category" name="subCategory" type="select" options={subCategories} register={register} errors={errors} disabled={!category} />
                 <FormInput label="Metal Type" name="metalType" type="select" options={METAL_TYPES} register={register} errors={errors} required />
@@ -96,7 +97,7 @@ export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Gol
             <div className="card p-6 bg-gradient-to-br from-primary-900 to-primary-800 text-white">
               <p className="text-sm text-primary-200">Preview Unique ID</p>
               <p className="text-xl font-mono font-bold text-gold-400 mt-2 break-all">
-                {previewId || 'Select category & carat'}
+                {uniqueNumber || 'Enter or select category & carat'}
               </p>
               <p className="text-xs text-primary-300 mt-3">Format: GLD-RNG-22K-0001</p>
             </div>
