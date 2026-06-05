@@ -7,6 +7,7 @@ import FormInput from '../../components/FormInput'
 import { CATEGORIES, SUB_CATEGORIES, METAL_TYPES, CARAT_OPTIONS } from '../../utils/constants'
 import { generateProductId } from '../../utils/productIdGenerator'
 import { addTempProduct, getAllProducts } from '../../utils/localProducts'
+import { getCategoryImage } from '../../utils/categoryImages'
 
 export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Gold Item' }) {
   const navigate = useNavigate()
@@ -44,7 +45,7 @@ export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Gol
       carat: data.carat,
       quantity: 1,
       status: 'In Stock',
-      image: imagePreview || 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100&h=100&fit=crop',
+      image: imagePreview || getCategoryImage(data.category),
       _temp: true,
       _createdAt: new Date().toISOString(),
     }

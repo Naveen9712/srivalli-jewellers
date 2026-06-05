@@ -1,17 +1,20 @@
 import { motion } from 'framer-motion'
 import { formatCurrency } from '../utils/productIdGenerator'
+import { getProductImage } from '../utils/categoryImages'
 
 export default function ProductCard({ product, onAdd, onClick }) {
+  const imageSrc = getProductImage(product)
+
   return (
     <motion.div
       whileHover={{ y: -2 }}
       onClick={() => onClick?.(product)}
-      className="card p-3 cursor-pointer hover:border-gold-500/50 transition-colors"
+      className="card p-3 cursor-pointer hover:border-gold-500/50 transition-colors overflow-hidden"
     >
       <img
-        src={product.image}
+        src={imageSrc}
         alt={product.name}
-        className="w-full h-28 object-cover rounded-lg bg-slate-100"
+        className="w-full h-36 object-cover rounded-lg bg-slate-100"
       />
       <div className="mt-3">
         <p className="text-xs text-gold-600 font-mono">{product.uniqueId}</p>
