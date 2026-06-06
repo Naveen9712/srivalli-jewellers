@@ -20,6 +20,7 @@ export default function AppRoutes() {
         {/* Stocks */}
         <Route path="stocks" element={<StockList title="Stocks" addPath="/stocks/add" />} />
         <Route path="stocks/add" element={<AddProduct title="Add Item" />} />
+        <Route path="stocks/edit/:id" element={<AddProduct />} />
         <Route path="product/:id" element={<ProductDetails />} />
         <Route path="deleted-items" element={<DeletedItems />} />
 

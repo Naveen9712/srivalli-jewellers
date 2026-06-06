@@ -1,10 +1,10 @@
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FiTrash2 } from 'react-icons/fi'
+import { FiEdit2, FiTrash2 } from 'react-icons/fi'
 import { formatCurrency, formatWeight } from '../utils/productIdGenerator'
 import { getProductImage } from '../utils/categoryImages'
 
-export default function ProductCard({ product, onAdd, onDelete, onClick, deletedAt, linkToDetails = true }) {
+export default function ProductCard({ product, onAdd, onDelete, onClick, deletedAt, linkToDetails = true, showEdit = false }) {
   const navigate = useNavigate()
   const imageSrc = getProductImage(product)
 
@@ -16,6 +16,11 @@ export default function ProductCard({ product, onAdd, onDelete, onClick, deleted
     if (linkToDetails && !onAdd) {
       navigate(`/product/${encodeURIComponent(product.id)}`)
     }
+  }
+
+  const handleEdit = (event) => {
+    event.stopPropagation()
+    navigate(`/stocks/edit/${encodeURIComponent(product.id)}`)
   }
 
   const handleDelete = (event) => {
@@ -67,7 +72,18 @@ export default function ProductCard({ product, onAdd, onDelete, onClick, deleted
           ) : (
             <span />
           )}
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-2 ml-auto flex-wrap justify-end">
+            {showEdit && (
+              <button
+                type="button"
+                onClick={handleEdit}
+                className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-primary-200 text-primary-700 hover:bg-primary-50 transition-colors"
+                aria-label={`Edit ${product.name}`}
+              >
+                <FiEdit2 className="text-sm" />
+                Edit
+              </button>
+            )}
             {onAdd && (
               <button
                 type="button"

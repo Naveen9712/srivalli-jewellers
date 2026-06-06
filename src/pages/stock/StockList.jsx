@@ -33,6 +33,7 @@ export default function StockList({ title = 'Stocks', addPath = '/stocks/add' })
             <ProductCard
               key={item.id}
               product={item}
+              showEdit
               onDelete={() => removeItem(item.id)}
             />
           ))}

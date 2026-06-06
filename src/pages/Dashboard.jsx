@@ -22,11 +22,6 @@ export default function Dashboard() {
       <PageHeader
         title="Dashboard"
         subtitle="Browse categories and view your saved items"
-        actions={
-          <Link to="/stocks/add" className="btn-gold">
-            <FiPlus /> Add Item
-          </Link>
-        }
       />
 
       <section>

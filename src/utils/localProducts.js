@@ -32,6 +32,23 @@ export function addTempProduct(product) {
   return next
 }
 
+export function updateProduct(id, updates) {
+  const active = loadTempProducts()
+  const index = active.findIndex((product) => product.id === id)
+  if (index === -1) return null
+
+  const updated = {
+    ...active[index],
+    ...updates,
+    id,
+    _updatedAt: new Date().toISOString(),
+  }
+  const next = [...active]
+  next[index] = updated
+  saveTempProducts(next)
+  return updated
+}
+
 export function loadDeletedProducts() {
   if (typeof window === 'undefined') return []
   const raw = window.localStorage.getItem(DELETED_STORAGE_KEY)

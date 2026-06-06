@@ -1,23 +1,26 @@
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { FiUpload, FiSave } from 'react-icons/fi'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import PageHeader from '../../components/PageHeader'
 import FormInput from '../../components/FormInput'
 import { CATEGORIES, SUB_CATEGORIES, METAL_TYPES, CARAT_OPTIONS } from '../../utils/constants'
 import { generateProductId } from '../../utils/productIdGenerator'
-import { addTempProduct, getAllProducts } from '../../utils/localProducts'
-import { getCategoryImage } from '../../utils/categoryImages'
+import { addTempProduct, getAllProducts, getProductById, updateProduct } from '../../utils/localProducts'
+import { getCategoryImage, getProductImage } from '../../utils/categoryImages'
 
-export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Gold Item' }) {
+export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Item' }) {
+  const { id } = useParams()
+  const isEdit = Boolean(id)
   const navigate = useNavigate()
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm({
     defaultValues: {
       metalType: metalTypeDefault,
     },
   })
 
   const [imagePreview, setImagePreview] = useState(null)
+  const [loaded, setLoaded] = useState(!isEdit)
 
   const category = watch('category')
   const carat = watch('carat')
@@ -28,15 +31,49 @@ export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Gol
   const subCategories = category ? SUB_CATEGORIES[category] || [] : []
 
   useEffect(() => {
+    if (!isEdit) return
+
+    const result = getProductById(id)
+    if (!result || result.isDeleted) {
+      setLoaded(true)
+      return
+    }
+
+    const product = result.product
+    setImagePreview(getProductImage(product))
+    reset({
+      productName: product.name,
+      uniqueNumber: product.uniqueId,
+      category: product.category,
+      subCategory: product.subCategory || '',
+      metalType: product.metalType || metalTypeDefault,
+      carat: product.carat,
+      weight: product.netWeight || '',
+    })
+    setLoaded(true)
+  }, [id, isEdit, reset, metalTypeDefault])
+
+  useEffect(() => {
+    if (isEdit) return
     if (category && carat) {
       const seq = getAllProducts().length + 1
       setValue('uniqueNumber', generateProductId(category, carat, seq))
     }
-  }, [category, carat, setValue])
+  }, [category, carat, setValue, isEdit])
+
+  if (isEdit && loaded) {
+    const result = getProductById(id)
+    if (!result || result.isDeleted) {
+      return <Navigate to="/stocks" replace />
+    }
+  }
+
+  if (isEdit && !loaded) {
+    return null
+  }
 
   const onSubmit = (data) => {
-    const tempItem = {
-      id: `temp-${Date.now()}`,
+    const payload = {
       uniqueId: data.uniqueNumber,
       name: data.productName,
       category: data.category,
@@ -44,14 +81,23 @@ export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Gol
       metalType: data.metalType,
       carat: data.carat,
       netWeight: Number(data.weight || 0),
-      quantity: 1,
-      status: 'In Stock',
       image: imagePreview || getCategoryImage(data.category),
-      _temp: true,
-      _createdAt: new Date().toISOString(),
     }
 
-    addTempProduct(tempItem)
+    if (isEdit) {
+      updateProduct(id, payload)
+      navigate(`/product/${encodeURIComponent(id)}`)
+      return
+    }
+
+    addTempProduct({
+      id: `temp-${Date.now()}`,
+      ...payload,
+      quantity: 1,
+      status: 'In Stock',
+      _temp: true,
+      _createdAt: new Date().toISOString(),
+    })
     navigate('/stocks')
   }
 
@@ -68,12 +114,18 @@ export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Gol
     }
   }
 
+  const pageTitle = isEdit ? 'Edit Item' : title
+
   return (
     <div className="page-container">
       <PageHeader
-        title={title}
-        subtitle="Add new jewellery item to inventory"
-        breadcrumbs={[{ label: 'Stocks', path: '/stocks' }, { label: title }]}
+        title={pageTitle}
+        subtitle={isEdit ? 'Update product details' : 'Add new jewellery item to inventory'}
+        breadcrumbs={[
+          { label: 'Stocks', path: '/stocks' },
+          ...(isEdit ? [{ label: 'Product', path: `/product/${id}` }] : []),
+          { label: pageTitle },
+        ]}
       />
 
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -118,7 +170,7 @@ export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Gol
             </div>
 
             <button type="submit" className="btn-gold w-full justify-center py-3">
-              <FiSave /> Save Product
+              <FiSave /> {isEdit ? 'Update Product' : 'Save Product'}
             </button>
           </div>
         </div>
