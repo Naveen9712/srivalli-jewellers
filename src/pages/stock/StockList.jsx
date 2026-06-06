@@ -1,16 +1,11 @@
-import { useEffect, useState } from 'react'
 import { FiPlus } from 'react-icons/fi'
 import { Link } from 'react-router-dom'
 import PageHeader from '../../components/PageHeader'
 import ProductCard from '../../components/ProductCard'
-import { loadTempProducts } from '../../utils/localProducts'
+import { useSavedProducts } from '../../hooks/useSavedProducts'
 
 export default function StockList({ title = 'Stocks', addPath = '/stocks/add' }) {
-  const [items, setItems] = useState([])
-
-  useEffect(() => {
-    setItems(loadTempProducts())
-  }, [])
+  const { items, removeItem } = useSavedProducts()
 
   return (
     <div className="page-container">
@@ -35,7 +30,11 @@ export default function StockList({ title = 'Stocks', addPath = '/stocks/add' })
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {items.map((item) => (
-            <ProductCard key={item.id} product={item} />
+            <ProductCard
+              key={item.id}
+              product={item}
+              onDelete={() => removeItem(item.id)}
+            />
           ))}
         </div>
       )}

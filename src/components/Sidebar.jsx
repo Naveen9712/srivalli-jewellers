@@ -3,13 +3,13 @@ import { motion } from 'framer-motion'
 import { useSelector, useDispatch } from 'react-redux'
 import {
   MdDashboard, MdPointOfSale, MdAddBox, MdInventory, MdPeople, MdAssessment, MdSettings,
-  MdChevronLeft, MdChevronRight,
+  MdDeleteOutline, MdChevronLeft, MdChevronRight,
 } from 'react-icons/md'
 import { toggleSidebar } from '../redux/slices/appSlice'
 import { SIDEBAR_LINKS } from '../utils/constants'
 
 const iconMap = {
-  MdDashboard, MdPointOfSale, MdAddBox, MdInventory, MdPeople, MdAssessment, MdSettings,
+  MdDashboard, MdPointOfSale, MdAddBox, MdInventory, MdPeople, MdAssessment, MdSettings, MdDeleteOutline,
 }
 
 export default function Sidebar() {

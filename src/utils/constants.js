@@ -29,11 +29,13 @@ export const METAL_TYPES = ['Gold', 'Silver']
 export const NAV_MENUS = [
   { label: 'Dashboard', path: '/', icon: 'MdDashboard' },
   { label: 'Stocks', path: '/stocks', icon: 'MdInventory' },
+  { label: 'Deleted Items', path: '/deleted-items', icon: 'MdDeleteOutline' },
   { label: 'Settings', path: '/settings', icon: 'MdSettings' },
 ]
 
 export const SIDEBAR_LINKS = [
   { label: 'Dashboard', path: '/', icon: 'MdDashboard' },
   { label: 'Stocks', path: '/stocks', icon: 'MdInventory' },
+  { label: 'Deleted Items', path: '/deleted-items', icon: 'MdDeleteOutline' },
   { label: 'Settings', path: '/settings', icon: 'MdSettings' },
 ]

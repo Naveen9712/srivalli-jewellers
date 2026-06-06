@@ -3,15 +3,17 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   MdDashboard, MdShoppingCart, MdInventory, MdPointOfSale, MdRecycling,
-  MdPayments, MdAssessment, MdReceiptLong, MdPeople, MdSettings,
+  MdPayments, MdAssessment, MdReceiptLong, MdPeople, MdSettings, MdDeleteOutline,
   MdMenu, MdNotifications, MdAccountCircle, MdClose,
 } from 'react-icons/md'
 import { FiChevronDown } from 'react-icons/fi'
+import { FiSearch } from 'react-icons/fi'
 import { NAV_MENUS } from '../utils/constants'
+import ItemSearchBar from './ItemSearchBar'
 
 const iconMap = {
   MdDashboard, MdShoppingCart, MdInventory, MdPointOfSale, MdRecycling,
-  MdPayments, MdAssessment, MdReceiptLong, MdPeople, MdSettings,
+  MdPayments, MdAssessment, MdReceiptLong, MdPeople, MdSettings, MdDeleteOutline,
 }
 
 function NavDropdown({ menu, isActive }) {
@@ -124,7 +126,24 @@ export default function Navbar() {
           ))}
         </nav>
 
+        <div className="hidden md:block flex-1 max-w-md mx-2 min-w-0">
+          <ItemSearchBar
+            compact
+            placeholder="Search unique number..."
+            iconClassName="text-white/50"
+            inputClassName="w-full pl-10 pr-3 py-1.5 text-sm rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500/50 focus:bg-white/15"
+          />
+        </div>
+
         <div className="flex items-center gap-1 sm:gap-2 ml-auto shrink-0">
+          <button
+            type="button"
+            onClick={() => navigate('/search')}
+            className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg md:hidden"
+            aria-label="Search items"
+          >
+            <FiSearch className="text-xl" />
+          </button>
           <button
             type="button"
             className="relative p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg"
@@ -172,6 +191,14 @@ export default function Navbar() {
               className="fixed top-14 right-0 bottom-0 w-full max-w-xs bg-primary-900 z-50 xl:hidden overflow-y-auto shadow-2xl border-l border-white/10"
             >
               <div className="p-4 flex flex-col gap-1">
+                <div className="mb-4 px-1">
+                  <ItemSearchBar
+                    compact
+                    placeholder="Search unique number..."
+                    iconClassName="text-white/50"
+                    inputClassName="w-full pl-10 pr-3 py-2 text-sm rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-gold-500/50"
+                  />
+                </div>
                 {NAV_MENUS.map((menu) =>
                   menu.children ? (
                     <div key={menu.label} className="mb-3">
