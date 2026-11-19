@@ -8,10 +8,11 @@
  * 2. Snippets → Add New. Title: "Srivalli Jewellers API".
  * 3. Paste everything BELOW the "<?php" line above into the code box.
  * 4. Choose "Run snippet everywhere", then click "Save Changes and Activate".
- * 5. Settings → Permalinks: pick any option except "Plain" and click Save
- *    (this makes the /wp-json/ URLs work).
+ *    No permalink change is needed – this works with "Plain" permalinks too.
  *
- * The React app talks to:  https://YOUR-SITE.com/wp-json/srivalli/v1
+ * The React app talks to:  https://YOUR-SITE.com/?rest_route=/srivalli/v1
+ * (the ?rest_route= form works with every permalink setting, so your other
+ *  snippets and URLs are not affected).
  *
  * AUTHENTICATION (simple, demo-level)
  * - Users log in with their normal WordPress username (or email) and password.
@@ -28,7 +29,7 @@
  * - "Delete" moves an item to Deleted Items (soft delete), like the app did before.
  * - Uploaded photos are saved to the WordPress Media Library.
  *
- * ENDPOINTS (all under /wp-json/srivalli/v1)
+ * ENDPOINTS (all under ?rest_route=/srivalli/v1 – e.g. ?rest_route=/srivalli/v1/products)
  *   POST   /auth/login        { username, password }            → { token, user }
  *   POST   /auth/register     { name, username, email, password } → { token, user }
  *   GET    /auth/me                                              → { user }

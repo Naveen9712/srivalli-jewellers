@@ -22,8 +22,8 @@ Professional frontend for jewellery shop management — ERP-style UI with React,
 2. **Snippets → Add New**, name it `Srivalli Jewellers API`.
 3. Open `backend/srivalli-jewellers-api.php`, copy everything **below** the first `<?php` line and paste it into the snippet.
 4. Select **Run snippet everywhere** → **Save Changes and Activate**.
-5. **Settings → Permalinks**: choose any option except *Plain* and click **Save** (needed for `/wp-json/` URLs).
-6. Check it works: open `https://your-site.com/wp-json/srivalli/v1/products` in a browser – you should see a JSON message saying to sign in (401). That means the API is live.
+5. **No permalink change needed.** The app uses WordPress's `?rest_route=` URL format, which works with every permalink setting (including *Plain*), so other snippets and URLs on the site are untouched.
+6. Check it works: open `https://your-site.com/?rest_route=/srivalli/v1/products` in a browser – you should see a JSON message saying to sign in (401). That means the API is live.
 
 ### 2. React app
 
@@ -37,8 +37,10 @@ npm run dev
 `.env`:
 
 ```
-VITE_API_URL=https://your-site.com/wp-json/srivalli/v1
+VITE_API_URL=https://your-site.com/?rest_route=/srivalli/v1
 ```
+
+(If the site is installed in a sub-folder, include it: `https://your-site.com/blog/?rest_route=/srivalli/v1`. Sites with pretty permalinks may also use `https://your-site.com/wp-json/srivalli/v1` – both formats are supported.)
 
 Open [http://localhost:5173](http://localhost:5173), click **Create account** (or sign in with an existing WordPress username/email and password).
 
@@ -60,7 +62,9 @@ npm run preview
 - Admins can browse all items in wp-admin → **Jewellery Items**.
 - Shop/rate/invoice **Settings** are still local to the browser session (unchanged).
 
-### API endpoints (`/wp-json/srivalli/v1`)
+### API endpoints (`?rest_route=/srivalli/v1`)
+
+Example: `GET https://your-site.com/?rest_route=/srivalli/v1/products`
 
 | Method | Path | Purpose |
 |---|---|---|
@@ -77,9 +81,10 @@ npm run preview
 ### Troubleshooting
 
 - **"Cannot reach the server"** – check `VITE_API_URL`, that the site is HTTPS if the app is HTTPS, and that the snippet is active.
-- **404 on /wp-json/** – permalinks are set to *Plain*; change them (step 5).
-- **Save works but edit/delete fails with 403/405** – some hosts block PUT/DELETE; ask the host to allow them for `/wp-json/`.
+- **404 / HTML page instead of JSON** – make sure `VITE_API_URL` uses the `?rest_route=/srivalli/v1` form (the `/wp-json/` form needs pretty permalinks).
+- **Save works but edit/delete fails with 403/405** – some hosts block PUT/DELETE; ask the host to allow them for WordPress REST API requests.
 - **Requests blocked** – security plugins that disable the REST API for logged-out visitors must allow the `srivalli/v1` namespace.
+- Query strings are joined with `&` automatically (e.g. `?rest_route=/srivalli/v1/products&status=deleted`); `src/services/api.js → buildApiUrl()` handles this.
 - To turn off sign-up from the app, set `SJ_ALLOW_REGISTRATION` to `false` at the top of the snippet and create users in wp-admin instead.
 
 ## Features

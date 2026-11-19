@@ -1,12 +1,33 @@
 import axios from 'axios'
 
 /**
- * WordPress REST base URL, e.g. https://your-site.com/wp-json/srivalli/v1
- * Set it in .env as VITE_API_URL (see .env.example).
+ * WordPress REST API address, set in .env as VITE_API_URL. Two formats work:
+ *
+ *   https://your-site.com/?rest_route=/srivalli/v1     ← works with ANY permalink setting
+ *                                                         (including "Plain") – recommended
+ *   https://your-site.com/wp-json/srivalli/v1          ← only when pretty permalinks are on
  */
-const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')
+const API_URL = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '')
 
 export const isApiConfigured = Boolean(API_URL)
+
+const usesRestRoute = API_URL.includes('rest_route=')
+
+/**
+ * Builds the full request URL for an API path such as "/products/12".
+ * With "?rest_route=" the path goes inside the rest_route value
+ * (…/?rest_route=/srivalli/v1/products/12) and any query string is joined with "&".
+ */
+export function buildApiUrl(path) {
+  if (!usesRestRoute) return API_URL + path
+
+  const [routePath, query] = path.split('?')
+  const [beforeRoute, afterRoute] = API_URL.split('rest_route=')
+  const [routeBase, ...otherParams] = afterRoute.split('&')
+  const route = decodeURIComponent(routeBase).replace(/\/+$/, '') + routePath
+  const extra = [...otherParams, ...(query ? [query] : [])]
+  return `${beforeRoute}rest_route=${route}${extra.length ? `&${extra.join('&')}` : ''}`
+}
 
 export const AUTH_STORAGE_KEY = 'srivalli:auth'
 
@@ -45,12 +66,13 @@ export function setUnauthorizedHandler(handler) {
 }
 
 const api = axios.create({
-  baseURL: API_URL,
   timeout: 30000,
   headers: { 'Content-Type': 'application/json' },
 })
 
 api.interceptors.request.use((config) => {
+  config.apiPath = config.url // e.g. "/auth/login" – kept for the 401 check below
+  config.url = buildApiUrl(config.url)
   if (authToken) config.headers['X-SJ-Token'] = authToken
   return config
 })
@@ -58,7 +80,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const url = error.config?.url || ''
+    const url = error.config?.apiPath || ''
     const isLoginCall = url.includes('/auth/login') || url.includes('/auth/register')
     const sentToken = error.config?.headers?.['X-SJ-Token']
     // Only expire the session if the rejected token is the one currently in use.
