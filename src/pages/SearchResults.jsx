@@ -5,12 +5,13 @@ import PageHeader from '../components/PageHeader'
 import ItemSearchBar from '../components/ItemSearchBar'
 import ProductCard from '../components/ProductCard'
 import { useSavedProducts } from '../hooks/useSavedProducts'
-import { searchInProducts } from '../utils/localProducts'
+import { searchInProducts } from '../utils/productHelpers'
+import ProductsGate from '../components/ProductsGate'
 
 export default function SearchResults() {
   const [searchParams] = useSearchParams()
   const query = searchParams.get('q') || ''
-  const { items, removeItem } = useSavedProducts()
+  const { items, removeItem, loading, error, refresh } = useSavedProducts()
 
   const results = useMemo(
     () => searchInProducts(items, query),
@@ -38,7 +39,8 @@ export default function SearchResults() {
         <ItemSearchBar autoFocus />
       </div>
 
-      {!query.trim() ? (
+      <ProductsGate loading={loading} error={error} onRetry={refresh}>
+        {!query.trim() ? (
         <div className="card p-10 text-center">
           <p className="text-slate-600">
             Enter a unique number (e.g. <span className="font-mono text-gold-600">GLD-RNG-22K-0001</span>), product name, or category to search.
@@ -62,6 +64,7 @@ export default function SearchResults() {
           ))}
         </div>
       )}
+      </ProductsGate>
     </div>
   )
 }

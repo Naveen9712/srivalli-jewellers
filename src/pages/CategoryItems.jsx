@@ -6,11 +6,12 @@ import ProductCard from '../components/ProductCard'
 import { CATEGORIES } from '../utils/constants'
 import { getCategoryImage } from '../utils/categoryImages'
 import { useSavedProducts } from '../hooks/useSavedProducts'
+import ProductsGate from '../components/ProductsGate'
 
 export default function CategoryItems() {
   const { category: categoryParam } = useParams()
   const category = decodeURIComponent(categoryParam || '')
-  const { items, removeItem } = useSavedProducts()
+  const { items, removeItem, loading, error, refresh } = useSavedProducts()
 
   const categoryItems = useMemo(
     () => items.filter((item) => item.category === category),
@@ -41,7 +42,8 @@ export default function CategoryItems() {
         <FiArrowLeft /> Back to categories
       </Link>
 
-      {categoryItems.length === 0 ? (
+      <ProductsGate loading={loading} error={error} onRetry={refresh}>
+        {categoryItems.length === 0 ? (
         <div className="card p-10 text-center">
           <img
             src={getCategoryImage(category)}
@@ -66,6 +68,7 @@ export default function CategoryItems() {
           ))}
         </div>
       )}
+      </ProductsGate>
     </div>
   )
 }

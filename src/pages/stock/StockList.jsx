@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom'
 import PageHeader from '../../components/PageHeader'
 import ProductCard from '../../components/ProductCard'
 import { useSavedProducts } from '../../hooks/useSavedProducts'
+import ProductsGate from '../../components/ProductsGate'
 
 export default function StockList({ title = 'Stocks', addPath = '/stocks/add' }) {
-  const { items, removeItem } = useSavedProducts()
+  const { items, removeItem, loading, error, refresh } = useSavedProducts()
 
   return (
     <div className="page-container">
@@ -20,7 +21,8 @@ export default function StockList({ title = 'Stocks', addPath = '/stocks/add' })
         }
       />
 
-      {items.length === 0 ? (
+      <ProductsGate loading={loading} error={error} onRetry={refresh}>
+        {items.length === 0 ? (
         <div className="card p-10 text-center">
           <p className="text-slate-600 mb-4">No items saved yet.</p>
           <Link to={addPath} className="btn-gold inline-flex">
@@ -39,6 +41,7 @@ export default function StockList({ title = 'Stocks', addPath = '/stocks/add' })
           ))}
         </div>
       )}
+      </ProductsGate>
     </div>
   )
 }

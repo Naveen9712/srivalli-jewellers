@@ -1,9 +1,10 @@
 import PageHeader from '../components/PageHeader'
 import ProductCard from '../components/ProductCard'
 import { useDeletedProducts } from '../hooks/useDeletedProducts'
+import ProductsGate from '../components/ProductsGate'
 
 export default function DeletedItems() {
-  const { items } = useDeletedProducts()
+  const { items, loading, error, refresh } = useDeletedProducts()
 
   return (
     <div className="page-container">
@@ -13,7 +14,8 @@ export default function DeletedItems() {
         breadcrumbs={[{ label: 'Dashboard', path: '/' }, { label: 'Deleted Items' }]}
       />
 
-      {items.length === 0 ? (
+      <ProductsGate loading={loading} error={error} onRetry={refresh}>
+        {items.length === 0 ? (
         <div className="card p-10 text-center">
           <p className="text-slate-600">No deleted items yet.</p>
           <p className="text-sm text-slate-500 mt-2">
@@ -31,6 +33,7 @@ export default function DeletedItems() {
           ))}
         </div>
       )}
+      </ProductsGate>
     </div>
   )
 }

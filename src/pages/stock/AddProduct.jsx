@@ -1,45 +1,51 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useDispatch } from 'react-redux'
 import { FiUpload, FiSave } from 'react-icons/fi'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import PageHeader from '../../components/PageHeader'
 import FormInput from '../../components/FormInput'
+import ProductsGate from '../../components/ProductsGate'
 import { CATEGORIES, SUB_CATEGORIES, METAL_TYPES, CARAT_OPTIONS } from '../../utils/constants'
-import { generateProductId } from '../../utils/productIdGenerator'
-import { addTempProduct, getAllProducts, getProductById, updateProduct } from '../../utils/localProducts'
-import { getCategoryImage, getProductImage } from '../../utils/categoryImages'
+import { generateNextProductId } from '../../utils/productIdGenerator'
+import { getProductImage } from '../../utils/categoryImages'
+import { resizeImageFile } from '../../utils/imageResize'
+import { useProduct, useProducts } from '../../hooks/useProducts'
+import { createProduct, updateProduct } from '../../redux/slices/productsSlice'
 
 export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Item' }) {
   const { id } = useParams()
   const isEdit = Boolean(id)
   const navigate = useNavigate()
-  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm({
+  const dispatch = useDispatch()
+  const { register, handleSubmit, watch, setValue, setError, reset, formState: { errors } } = useForm({
     defaultValues: {
       metalType: metalTypeDefault,
     },
   })
 
+  const { allItems, loading: listLoading, error: listError, refresh } = useProducts()
+  const { product, isDeleted, loading: productLoading } = useProduct(id)
+
   const [imagePreview, setImagePreview] = useState(null)
-  const [loaded, setLoaded] = useState(!isEdit)
+  const [imageChanged, setImageChanged] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+  const formFilled = useRef(false)
 
   const category = watch('category')
   const carat = watch('carat')
   const metalType = watch('metalType')
+  const subCategory = watch('subCategory')
   const uniqueNumber = watch('uniqueNumber')
 
   const caratOptions = metalType === 'Silver' ? CARAT_OPTIONS.silver : CARAT_OPTIONS.gold
   const subCategories = category ? SUB_CATEGORIES[category] || [] : []
 
+  // Edit: fill the form once the product has loaded from the server.
   useEffect(() => {
-    if (!isEdit) return
-
-    const result = getProductById(id)
-    if (!result || result.isDeleted) {
-      setLoaded(true)
-      return
-    }
-
-    const product = result.product
+    if (!isEdit || !product || formFilled.current) return
+    formFilled.current = true
     setImagePreview(getProductImage(product))
     reset({
       productName: product.name,
@@ -50,67 +56,94 @@ export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Ite
       carat: product.carat,
       weight: product.netWeight || '',
     })
-    setLoaded(true)
-  }, [id, isEdit, reset, metalTypeDefault])
+  }, [isEdit, product, reset, metalTypeDefault])
 
+  // Keep dependent selects valid when the parent value changes.
+  useEffect(() => {
+    if (subCategory && !subCategories.includes(subCategory)) setValue('subCategory', '')
+  }, [category, subCategory, subCategories, setValue])
+
+  useEffect(() => {
+    if (carat && !caratOptions.includes(carat)) setValue('carat', '')
+  }, [metalType, carat, caratOptions, setValue])
+
+  // Add: suggest the next free unique number for this category + carat.
   useEffect(() => {
     if (isEdit) return
     if (category && carat) {
-      const seq = getAllProducts().length + 1
-      setValue('uniqueNumber', generateProductId(category, carat, seq))
+      setValue('uniqueNumber', generateNextProductId(category, carat, allItems))
     }
-  }, [category, carat, setValue, isEdit])
+  }, [category, carat, allItems, setValue, isEdit])
 
-  if (isEdit && loaded) {
-    const result = getProductById(id)
-    if (!result || result.isDeleted) {
-      return <Navigate to="/stocks" replace />
-    }
+  if (isEdit && productLoading) {
+    return (
+      <div className="page-container">
+        <ProductsGate loading />
+      </div>
+    )
   }
 
-  if (isEdit && !loaded) {
-    return null
+  if (isEdit && listError && !product) {
+    return (
+      <div className="page-container">
+        <ProductsGate error={listError} onRetry={refresh} />
+      </div>
+    )
   }
 
-  const onSubmit = (data) => {
+  if (isEdit && !listLoading && (!product || isDeleted)) {
+    return <Navigate to="/stocks" replace />
+  }
+
+  const onSubmit = async (data) => {
+    setSubmitError('')
+    setSaving(true)
+
     const payload = {
-      uniqueId: data.uniqueNumber,
-      name: data.productName,
+      uniqueId: data.uniqueNumber.trim(),
+      name: data.productName.trim(),
       category: data.category,
       subCategory: data.subCategory || '',
       metalType: data.metalType,
       carat: data.carat,
       netWeight: Number(data.weight || 0),
-      image: imagePreview || getCategoryImage(data.category),
     }
+    // Only send the photo when a new one was chosen; otherwise the saved one is kept.
+    // Items without a photo show their category picture, as before.
+    if (imageChanged && imagePreview) payload.image = imagePreview
 
-    if (isEdit) {
-      updateProduct(id, payload)
-      navigate(`/product/${encodeURIComponent(id)}`)
-      return
+    try {
+      if (isEdit) {
+        await dispatch(updateProduct({ id, changes: payload })).unwrap()
+        navigate(`/product/${encodeURIComponent(id)}`)
+      } else {
+        await dispatch(createProduct(payload)).unwrap()
+        navigate('/stocks')
+      }
+    } catch (err) {
+      setSaving(false)
+      // The server names the form field that was rejected (e.g. a duplicate unique number).
+      const formFields = ['productName', 'uniqueNumber', 'category', 'subCategory', 'metalType', 'carat', 'weight']
+      if (formFields.includes(err?.field)) {
+        setError(err.field, { type: 'server', message: err.message }, { shouldFocus: true })
+      } else {
+        setSubmitError(err?.message || 'Could not save the item. Please try again.')
+      }
     }
-
-    addTempProduct({
-      id: `temp-${Date.now()}`,
-      ...payload,
-      quantity: 1,
-      status: 'In Stock',
-      _temp: true,
-      _createdAt: new Date().toISOString(),
-    })
-    navigate('/stocks')
   }
 
-  const handleImage = (e) => {
+  const handleImage = async (e) => {
     const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = () => {
-        const result = typeof reader.result === 'string' ? reader.result : null
-        if (result) setImagePreview(result)
-      }
-      reader.readAsDataURL(file)
+    if (!file) return
+    try {
+      // Shrink large phone photos before upload (keeps saving fast).
+      const dataUrl = await resizeImageFile(file)
+      setImagePreview(dataUrl)
+      setImageChanged(true)
+      setSubmitError('')
       setValue('image', file.name)
+    } catch {
+      setSubmitError('That file could not be read as an image. Please choose a JPG or PNG photo.')
     }
   }
 
@@ -138,9 +171,22 @@ export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Ite
                 <FormInput label="Unique Number" name="uniqueNumber" register={register} errors={errors} required rules={{ required: 'Required' }} placeholder="GLD-RNG-22K-0001" />
                 <FormInput label="Product Category" name="category" type="select" options={CATEGORIES} register={register} errors={errors} required rules={{ required: 'Required' }} />
                 <FormInput label="Sub Category" name="subCategory" type="select" options={subCategories} register={register} errors={errors} disabled={!category} />
-                <FormInput label="Metal Type" name="metalType" type="select" options={METAL_TYPES} register={register} errors={errors} required />
+                <FormInput label="Metal Type" name="metalType" type="select" options={METAL_TYPES} register={register} errors={errors} required rules={{ required: 'Required' }} />
                 <FormInput label="Carat Value" name="carat" type="select" options={caratOptions} register={register} errors={errors} required rules={{ required: 'Required' }} />
-                <FormInput label="Weight (g)" name="weight" type="number" step="0.001" register={register} errors={errors} required rules={{ required: 'Required' }} />
+                <FormInput
+                  label="Weight (g)"
+                  name="weight"
+                  type="number"
+                  step="0.001"
+                  min="0.001"
+                  register={register}
+                  errors={errors}
+                  required
+                  rules={{
+                    required: 'Required',
+                    validate: (value) => Number(value) > 0 || 'Enter a weight greater than 0',
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -169,8 +215,18 @@ export default function AddProduct({ metalTypeDefault = 'Gold', title = 'Add Ite
               </label>
             </div>
 
-            <button type="submit" className="btn-gold w-full justify-center py-3">
-              <FiSave /> {isEdit ? 'Update Product' : 'Save Product'}
+            {submitError && (
+              <p role="alert" className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+                {submitError}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={saving}
+              className="btn-gold w-full justify-center py-3 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <FiSave /> {saving ? 'Saving…' : isEdit ? 'Update Product' : 'Save Product'}
             </button>
           </div>
         </div>

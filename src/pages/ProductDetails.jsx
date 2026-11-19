@@ -1,9 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
+import { useDispatch } from 'react-redux'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { FiArrowLeft, FiTrash2 } from 'react-icons/fi'
 import { formatCurrency, formatWeight } from '../utils/productIdGenerator'
 import { getCategoryImage, getProductImage } from '../utils/categoryImages'
-import { deleteProduct, getProductById } from '../utils/localProducts'
+import { useProduct } from '../hooks/useProducts'
+import { deleteProduct } from '../redux/slices/productsSlice'
+import ProductsGate from '../components/ProductsGate'
 
 function DetailRow({ label, value, mono }) {
   if (value == null || value === '') return null
@@ -23,21 +26,36 @@ function DetailRow({ label, value, mono }) {
 export default function ProductDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const dispatch = useDispatch()
   const [activeTab, setActiveTab] = useState('additional')
+  const [deleting, setDeleting] = useState(false)
 
-  const result = useMemo(() => getProductById(id), [id])
+  const { product, isDeleted, loading, error, refresh } = useProduct(id)
 
-  if (!result) {
+  if (loading || (error && !product)) {
+    return (
+      <div className="page-container max-w-6xl mx-auto">
+        <ProductsGate loading={loading} error={error} onRetry={refresh} />
+      </div>
+    )
+  }
+
+  // Not found (or not this user's item)
+  if (!product) {
     return <Navigate to="/stocks" replace />
   }
 
-  const { product, isDeleted } = result
   const imageSrc = getProductImage(product)
 
-  const handleDelete = () => {
-    if (confirm(`Move "${product.name}" to Deleted Items?`)) {
-      deleteProduct(product.id)
+  const handleDelete = async () => {
+    if (!confirm(`Move "${product.name}" to Deleted Items?`)) return
+    setDeleting(true)
+    try {
+      await dispatch(deleteProduct(product.id)).unwrap()
       navigate('/deleted-items')
+    } catch (err) {
+      alert(err?.message || 'Could not delete the item. Please try again.')
+      setDeleting(false)
     }
   }
 
@@ -163,9 +181,10 @@ export default function ProductDetails() {
               <button
                 type="button"
                 onClick={handleDelete}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 font-medium transition-colors"
+                disabled={deleting}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 font-medium transition-colors disabled:opacity-60"
               >
-                <FiTrash2 /> Move to Deleted Items
+                <FiTrash2 /> {deleting ? 'Moving…' : 'Move to Deleted Items'}
               </button>
             )}
             {isDeleted && (

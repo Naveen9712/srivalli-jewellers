@@ -1,24 +1,27 @@
-import { useCallback, useEffect, useState } from 'react'
-import { deleteProduct, loadTempProducts } from '../utils/localProducts'
+import { useCallback, useMemo } from 'react'
+import { useDispatch } from 'react-redux'
+import { deleteProduct } from '../redux/slices/productsSlice'
+import { useProducts } from './useProducts'
 
+/** The signed-in user's active (not deleted) products. */
 export function useSavedProducts() {
-  const [items, setItems] = useState([])
+  const dispatch = useDispatch()
+  const { allItems, loading, error, refresh } = useProducts()
 
-  const refresh = useCallback(() => {
-    setItems(loadTempProducts())
-  }, [])
-
-  useEffect(() => {
-    refresh()
-  }, [refresh])
+  const items = useMemo(() => allItems.filter((item) => !item._deletedAt), [allItems])
 
   const removeItem = useCallback(
-    (id) => {
-      deleteProduct(id)
-      refresh()
+    async (id) => {
+      try {
+        await dispatch(deleteProduct(id)).unwrap()
+        return true
+      } catch (err) {
+        alert(err?.message || 'Could not delete the item. Please try again.')
+        return false
+      }
     },
-    [refresh],
+    [dispatch],
   )
 
-  return { items, refresh, removeItem }
+  return { items, refresh, removeItem, loading, error }
 }

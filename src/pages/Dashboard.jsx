@@ -5,9 +5,10 @@ import PageHeader from '../components/PageHeader'
 import CategoryCard from '../components/CategoryCard'
 import { CATEGORIES } from '../utils/constants'
 import { useSavedProducts } from '../hooks/useSavedProducts'
+import ProductsGate from '../components/ProductsGate'
 
 export default function Dashboard() {
-  const { items } = useSavedProducts()
+  const { items, loading, error, refresh } = useSavedProducts()
 
   const countByCategory = useMemo(() => {
     const counts = Object.fromEntries(CATEGORIES.map((c) => [c, 0]))
@@ -26,7 +27,7 @@ export default function Dashboard() {
 
       <section>
         <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">
-          Categorie
+          Categories
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {CATEGORIES.map((category) => (
@@ -40,8 +41,10 @@ export default function Dashboard() {
         </div>
       </section>
 
+      <div className="mt-8">
+      <ProductsGate loading={loading} error={error} onRetry={refresh}>
       {items.length === 0 && (
-        <div className="card p-10 text-center mt-8">
+        <div className="card p-10 text-center">
           <p className="text-slate-600 mb-4">You have not added any items yet.</p>
           <Link to="/stocks/add" className="btn-gold inline-flex">
             <FiPlus /> Add your first item
@@ -50,10 +53,12 @@ export default function Dashboard() {
       )}
 
       {items.length > 0 && (
-        <p className="text-center text-slate-500 text-sm mt-8">
+        <p className="text-center text-slate-500 text-sm">
           Click a category to view your saved items.
         </p>
       )}
+      </ProductsGate>
+      </div>
     </div>
   )
 }

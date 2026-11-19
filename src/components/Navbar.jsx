@@ -1,15 +1,17 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   MdDashboard, MdShoppingCart, MdInventory, MdPointOfSale, MdRecycling,
   MdPayments, MdAssessment, MdReceiptLong, MdPeople, MdSettings, MdDeleteOutline,
-  MdMenu, MdNotifications, MdAccountCircle, MdClose,
+  MdMenu, MdNotifications, MdAccountCircle, MdClose, MdLogout,
 } from 'react-icons/md'
 import { FiChevronDown } from 'react-icons/fi'
 import { FiSearch } from 'react-icons/fi'
 import { NAV_MENUS } from '../utils/constants'
 import ItemSearchBar from './ItemSearchBar'
+import { logout } from '../redux/slices/authSlice'
 
 const iconMap = {
   MdDashboard, MdShoppingCart, MdInventory, MdPointOfSale, MdRecycling,
@@ -84,7 +86,15 @@ function NavDropdown({ menu, isActive }) {
 export default function Navbar() {
   const location = useLocation()
   const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const user = useSelector((state) => state.auth.user)
+  const userLabel = user?.displayName || user?.username || 'Account'
   const [mobileMenu, setMobileMenu] = useState(false)
+
+  const handleLogout = () => {
+    setMobileMenu(false)
+    dispatch(logout())
+  }
 
   const isMenuActive = (menu) => {
     if (menu.path) return location.pathname === menu.path
@@ -159,7 +169,16 @@ export default function Navbar() {
             aria-label="Settings"
           >
             <MdAccountCircle className="text-2xl" />
-            <span className="hidden md:block text-sm font-medium">Admin</span>
+            <span className="hidden md:block text-sm font-medium max-w-[140px] truncate">{userLabel}</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="hidden sm:flex p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg"
+            aria-label="Log out"
+            title="Log out"
+          >
+            <MdLogout className="text-xl" />
           </button>
           <button
             type="button"
@@ -233,6 +252,16 @@ export default function Navbar() {
                     </Link>
                   ),
                 )}
+                <div className="mt-4 pt-4 border-t border-white/10">
+                  <p className="px-4 pb-2 text-xs text-white/50 truncate">Signed in as {userLabel}</p>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2 px-4 py-3 text-sm rounded-lg text-white/90 hover:bg-white/10 transition-colors"
+                  >
+                    <MdLogout className="text-lg" /> Log out
+                  </button>
+                </div>
               </div>
             </motion.nav>
           </>

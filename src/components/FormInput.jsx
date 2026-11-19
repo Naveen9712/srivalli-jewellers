@@ -8,6 +8,7 @@ export default function FormInput({
   placeholder,
   required,
   disabled,
+  rules,
   className = '',
   ...rest
 }) {
@@ -26,7 +27,7 @@ export default function FormInput({
           id={name}
           disabled={disabled}
           className={`input-field ${error ? 'border-red-400' : ''}`}
-          {...register(name)}
+          {...register(name, rules)}
           {...rest}
         >
           <option value="">Select {label}</option>
@@ -43,7 +44,7 @@ export default function FormInput({
           placeholder={placeholder}
           disabled={disabled}
           className={`input-field resize-none ${error ? 'border-red-400' : ''}`}
-          {...register(name)}
+          {...register(name, rules)}
           {...rest}
         />
       ) : (
@@ -53,7 +54,7 @@ export default function FormInput({
           placeholder={placeholder}
           disabled={disabled}
           className={`input-field ${error ? 'border-red-400' : ''}`}
-          {...register(name)}
+          {...register(name, rules)}
           {...rest}
         />
       )}
