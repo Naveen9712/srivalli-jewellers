@@ -58,7 +58,7 @@ npm run preview
 - Every user signs in and gets their own dashboard, stock list, search and Deleted Items.
 - Products are stored in WordPress (custom post type `sj_product`, owner = the user who created it). The API only ever returns, edits or deletes the signed-in user's own items; another user's product ID returns *Product not found*.
 - Product photos are uploaded to the WordPress Media Library (resized to max 1200px in the browser first).
-- Login is a simple token (demo level): username/email + password → token saved in the browser and sent as the `X-SJ-Token` header. Tokens last 30 days; **Log out** revokes it.
+- Login is a simple token (demo level): username/email + password → token saved in the browser and sent as a Bearer `Authorization` header. Tokens last 30 days; **Log out** revokes it.
 - Admins can browse all items in wp-admin → **Jewellery Items**.
 - Shop/rate/invoice **Settings** are still local to the browser session (unchanged).
 

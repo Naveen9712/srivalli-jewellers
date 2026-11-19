@@ -17,5 +17,5 @@ export async function fetchCurrentUser() {
 
 export async function logoutRequest(token) {
   if (!token) return
-  await api.post(endpoints.logout, null, { headers: { 'X-SJ-Token': token } })
+  await api.post(endpoints.logout, null, { headers: { Authorization: `Bearer ${token}` } })
 }

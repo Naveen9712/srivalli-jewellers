@@ -73,7 +73,7 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   config.apiPath = config.url // e.g. "/auth/login" – kept for the 401 check below
   config.url = buildApiUrl(config.url)
-  if (authToken) config.headers['X-SJ-Token'] = authToken
+  if (authToken) config.headers.Authorization = `Bearer ${authToken}`
   return config
 })
 
@@ -82,7 +82,10 @@ api.interceptors.response.use(
   (error) => {
     const url = error.config?.apiPath || ''
     const isLoginCall = url.includes('/auth/login') || url.includes('/auth/register')
-    const sentToken = error.config?.headers?.['X-SJ-Token']
+    const authorization = error.config?.headers?.get?.('Authorization')
+      || error.config?.headers?.Authorization
+      || error.config?.headers?.authorization
+    const sentToken = authorization?.startsWith('Bearer ') ? authorization.slice(7) : null
     // Only expire the session if the rejected token is the one currently in use.
     if (error.response?.status === 401 && authToken && sentToken === authToken && !isLoginCall) {
       onUnauthorized?.()
